@@ -33,7 +33,8 @@ _REPORT_INSTRUCTION = (
     '"ticker_notes" (object mapping each ticker SYMBOL to ONE concise sentence '
     "of context/news), "
     '"opportunities" (array of 3-6 short positive-outlook strings), '
-    '"risks" (array of 3-6 short risk strings).'
+    '"risks" (array of 3-6 short risk strings). '
+    "Use plain punctuation and do not use em dashes; prefer commas or periods."
 )
 
 

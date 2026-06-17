@@ -42,7 +42,7 @@ export default function ChatPanel({ onClose }) {
         {messages.length === 0 && (
           <p className="text-inksoft">
             Name a company or ticker (e.g. “How is NVDA doing?”). You’ll get context and
-            risks — never a buy/sell verdict.
+            risks, never a buy/sell verdict.
           </p>
         )}
         {messages.map((m, i) => (

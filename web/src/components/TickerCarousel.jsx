@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import PriceChart from "./PriceChart";
 
 const fmt = (n) =>
-  n == null ? "—" : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  n == null ? "n/a" : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
 
 function Change({ value }) {
-  if (value == null) return <span className="text-inksoft">—</span>;
+  if (value == null) return <span className="text-inksoft">n/a</span>;
   const up = value >= 0;
   return (
     <span className={`tabular-nums ${up ? "text-up" : "text-down"}`}>
@@ -80,7 +80,7 @@ export default function TickerCarousel({ tickers, notes }) {
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-inksoft">
-          <span>RSI14 {rsi == null ? "—" : rsi.toFixed(1)}</span>
+          <span>RSI14 {rsi == null ? "n/a" : rsi.toFixed(1)}</span>
           {t.signals.map((s) => (
             <SignalChip key={s.code} signal={s} />
           ))}
