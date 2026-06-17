@@ -59,10 +59,8 @@ export default function App() {
 
         {status === "ok" && report && (
           <div className="grid grid-cols-1 gap-3 lg:h-full lg:grid-cols-12">
-            <section className="flex flex-col gap-3 lg:col-span-5 lg:min-h-0">
-              <div className="min-h-[20rem] lg:min-h-0 lg:flex-1">
-                <TickerCarousel tickers={report.tickers} notes={notes} />
-              </div>
+            <section className="flex flex-col gap-3 lg:col-span-5 lg:min-h-0 lg:overflow-y-auto">
+              <TickerCarousel tickers={report.tickers} notes={notes} />
               <TopMovers movers={report.top_movers} />
             </section>
 

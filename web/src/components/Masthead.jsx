@@ -7,19 +7,19 @@ export default function Masthead({ report }) {
   });
   return (
     <header className="border-b-2 border-ink bg-paper">
-      <div className="mx-auto grid max-w-screen-2xl grid-cols-3 items-center px-4 py-1.5 text-[11px] uppercase tracking-widest text-inksoft">
-        <span className="justify-self-start">{today}</span>
-        <span className="hidden justify-self-center text-center sm:block">
+      <div className="mx-auto flex max-w-screen-2xl flex-col items-center gap-0.5 px-4 py-1.5 text-[11px] uppercase tracking-widest text-inksoft sm:grid sm:grid-cols-3 sm:items-center sm:gap-0">
+        <span className="sm:justify-self-start">{today}</span>
+        <span className="hidden sm:block sm:justify-self-center sm:text-center">
           Educational market analysis
         </span>
         {report ? (
           <span
-            className={`justify-self-end text-right ${report.llm_ok ? "text-up" : "text-gold"}`}
+            className={`text-center ${report.llm_ok ? "text-up" : "text-gold"} sm:justify-self-end sm:text-right`}
           >
             {report.date} · {report.session} · {report.llm_ok ? "live grounding" : "fallback"}
           </span>
         ) : (
-          <span className="justify-self-end" />
+          <span className="hidden sm:block sm:justify-self-end" />
         )}
       </div>
       <div className="border-t border-line py-1.5 text-center">

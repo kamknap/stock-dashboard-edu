@@ -48,7 +48,7 @@ export default function TickerCarousel({ tickers, notes }) {
 
   return (
     <div
-      className="flex h-full min-h-0 flex-col rounded border border-line bg-panel"
+      className="flex flex-col rounded border border-line bg-panel"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -65,7 +65,7 @@ export default function TickerCarousel({ tickers, notes }) {
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0 flex-col p-4">
+      <div className="flex flex-col p-4">
         <div className="flex items-baseline justify-between gap-3">
           <div className="min-w-0">
             <div className="font-serif text-2xl leading-tight">{t.symbol}</div>
@@ -90,8 +90,8 @@ export default function TickerCarousel({ tickers, notes }) {
           <p className="mt-2 line-clamp-2 text-sm text-inksoft">{notes[t.symbol]}</p>
         )}
 
-        <div className="mt-3 flex-1 min-h-0">
-          <PriceChart symbol={t.symbol} height="100%" />
+        <div className="mt-3">
+          <PriceChart symbol={t.symbol} height={200} />
         </div>
       </div>
 
