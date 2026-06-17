@@ -65,7 +65,7 @@ def test_valid_json_and_sources() -> None:
     narrative, sources, ok = run(handler)
     assert ok is True
     assert narrative.market_summary == "ok summary"
-    assert narrative.ticker_notes["MSFT"] == "note"
+    assert {n.symbol: n.note for n in narrative.ticker_notes}["MSFT"] == "note"
     assert sources[0].url == "https://example.com/a"
 
 
@@ -87,7 +87,7 @@ def test_malformed_json_falls_back() -> None:
     narrative, _, ok = run(handler)
     assert ok is False
     assert narrative.market_summary.startswith("Automated summary")
-    assert "MSFT" in narrative.ticker_notes  # fallback fills notes from numbers
+    assert "MSFT" in {n.symbol for n in narrative.ticker_notes}  # fallback fills notes
 
 
 def test_http_error_falls_back() -> None:

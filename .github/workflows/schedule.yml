@@ -1,0 +1,44 @@
+name: Scheduled analysis
+
+# Triggers the protected /run-analysis endpoint twice a day. GitHub cron is in
+# UTC and has no DST, so these fire at ~09:00 / ~15:00 Europe/Warsaw during
+# summer (CEST = UTC+2) and ~08:00 / ~14:00 during winter (CET = UTC+1).
+# Adjust by one hour if you need exact wall-clock timing year-round.
+on:
+  schedule:
+    - cron: "0 7 * * 1-5" # ~09:00 Europe/Warsaw (weekdays) -> morning
+    - cron: "0 13 * * 1-5" # ~15:00 Europe/Warsaw (weekdays) -> afternoon
+  workflow_dispatch:
+    inputs:
+      session:
+        description: "Which session to generate"
+        type: choice
+        options: [morning, afternoon]
+        default: morning
+
+jobs:
+  run-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /run-analysis
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          RUN_ANALYSIS_SECRET: ${{ secrets.RUN_ANALYSIS_SECRET }}
+        run: |
+          session="${{ github.event.inputs.session }}"
+          if [ -z "$session" ]; then
+            if [ "${{ github.event.schedule }}" = "0 13 * * 1-5" ]; then
+              session="afternoon"
+            else
+              session="morning"
+            fi
+          fi
+          echo "Generating $session report via $API_URL"
+          code=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
+            -X POST "$API_URL/run-analysis?session=$session" \
+            -H "X-Scheduler-Secret: $RUN_ANALYSIS_SECRET" \
+            --max-time 180)
+          echo "HTTP $code"
+          head -c 600 /tmp/resp.json || true
+          echo
+          test "$code" = "200"

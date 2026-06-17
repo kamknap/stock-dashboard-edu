@@ -27,7 +27,9 @@ function SignalChip({ signal }) {
 }
 
 export default function ReportView({ report }) {
-  const notes = report.narrative?.ticker_notes || {};
+  const notes = Object.fromEntries(
+    (report.narrative?.ticker_notes || []).map((n) => [n.symbol, n.note]),
+  );
   return (
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
