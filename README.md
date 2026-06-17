@@ -3,12 +3,12 @@
 A web app for **educational** stock-market analysis with a small analytical chat.
 Twice a day it computes technical indicators for a watchlist, ranks the top
 movers, and generates a news-grounded market-context report. It is **read-only /
-analytical** — not a trading bot, and **not investment advice**.
+analytical** - not a trading bot, and **not investment advice**.
 
 **Live app:** https://stock-dashboard-edu.web.app
 **API:** https://stock-dashboard-api-9bcs.onrender.com (`/docs` for the OpenAPI UI)
 
-> Disclaimer shown across the UI: *Educational tool — not investment advice.*
+> Disclaimer shown across the UI: *Educational tool - not investment advice.*
 
 ## What it does
 
