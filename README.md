@@ -24,10 +24,10 @@ analytical** - not a trading bot, and **not investment advice**.
 
 - **Numbers are the source of truth, computed in Python.** SMA / EMA / RSI
   (Wilder) / MACD, % changes, signals and the movers ranking are all
-  deterministic (pandas). The LLM only narrates — it never invents or overrides
+  deterministic (pandas). The LLM only narrates - it never invents or overrides
   numbers and never predicts prices.
 - **Signals are explicit rules**, e.g. `RSI < 30 AND price > EMA50` =
-  "oversold within an uptrend" — not model opinion.
+  "oversold within an uptrend" - not model opinion.
 - **LLM = narrative layer.** Gemini receives the already-computed data and adds
   grounded news context. On Gemini 2.5, forced-JSON and Search grounding can't be
   combined, so JSON is requested in the prompt, then **parsed and validated with
@@ -36,7 +36,7 @@ analytical** - not a trading bot, and **not investment advice**.
   all markets, behind an **async TTL cache** with bounded-concurrency batching.
   (Finnhub's free tier lacks historical candles, so it isn't used.)
 - **Top movers come from the watchlist** (sign-based gainers/losers, daily +
-  weekly) — reusing cached candles, with no extra API calls.
+  weekly) - reusing cached candles, with no extra API calls.
 - **One reusable data/analysis layer** powers the report, the chat tool and the
   movers ranking.
 
