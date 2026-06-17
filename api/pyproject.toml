@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+# Run pytest from the api/ directory; this makes the `app` package importable.
+pythonpath = ["."]
+testpaths = ["tests"]

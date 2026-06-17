@@ -1,0 +1,34 @@
+# Render Blueprint — backend web service (free tier).
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Render injects the listening port via $PORT automatically (do NOT set PORT here).
+# Secret values use `sync: false` so they are entered in the Render dashboard,
+# never committed to the repo.
+services:
+  - type: web
+    name: stock-dashboard-api
+    runtime: docker
+    plan: free
+    rootDir: api
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      # Comma-separated frontend origins allowed by CORS (set in dashboard).
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # Shared secret expected in the X-Scheduler-Secret header.
+      - key: RUN_ANALYSIS_SECRET
+        sync: false
+      # External APIs (used from phase 2 onward).
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TWELVE_DATA_API_KEY
+        sync: false
+      # Firestore / GCP (phase 7).
+      - key: GCP_PROJECT_ID
+        sync: false

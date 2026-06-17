@@ -1,0 +1,10 @@
+# Runtime dependencies.
+# LLM and Firestore deps are added in later phases.
+fastapi>=0.115,<0.116
+uvicorn[standard]>=0.34,<0.35
+pydantic>=2.9,<3.0
+pydantic-settings>=2.6,<3.0
+httpx>=0.27,<0.28
+# Indicators (phase 3) — computed manually in pandas; numpy is its dependency.
+numpy>=1.26
+pandas>=2.0,<3.0
