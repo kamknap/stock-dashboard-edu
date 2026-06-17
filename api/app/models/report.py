@@ -13,16 +13,9 @@ from pydantic import BaseModel, Field
 
 from app.models.analysis import TickerAnalysis
 from app.models.movers import TopMovers
-from app.models.schemas import DISCLAIMER
+from app.models.schemas import DISCLAIMER, Source
 
 Session = Literal["morning", "afternoon"]
-
-
-class Source(BaseModel):
-    """A grounding source cited by Google Search."""
-
-    title: str | None = None
-    url: str
 
 
 class LLMNarrative(BaseModel):

@@ -18,18 +18,17 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+class Source(BaseModel):
+    """A grounding source cited by Google Search."""
+
+    title: str | None = None
+    url: str
+
+
 # ---- /health ----
 class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     environment: str
-    timestamp: datetime = Field(default_factory=_utcnow)
-
-
-# ---- /run-analysis ----
-class RunAnalysisResponse(BaseModel):
-    status: Literal["ok"] = "ok"
-    stub: bool = True
-    detail: str = "run-analysis stub; indicator pipeline added in later phases."
     timestamp: datetime = Field(default_factory=_utcnow)
 
 
@@ -52,6 +51,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
-    stub: bool = True
+    ticker: str | None = None
+    sources: list[Source] = Field(default_factory=list)
     disclaimer: str = DISCLAIMER
     timestamp: datetime = Field(default_factory=_utcnow)

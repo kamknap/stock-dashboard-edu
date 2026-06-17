@@ -1,9 +1,10 @@
-# Render Blueprint — backend web service (free tier).
+# Render Blueprint — backend web service (free tier, no credit card).
 # Docs: https://render.com/docs/blueprint-spec
 #
 # Render injects the listening port via $PORT automatically (do NOT set PORT here).
-# Secret values use `sync: false` so they are entered in the Render dashboard,
-# never committed to the repo.
+# `sync: false` values are entered in the Render dashboard when the Blueprint is
+# created (never committed). The service-account JSON is uploaded as a Render
+# "Secret File" named firebase-service-account.json (mounted at /etc/secrets/).
 services:
   - type: web
     name: stock-dashboard-api
@@ -16,19 +17,25 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      # Path to the uploaded Secret File (the value itself is not a secret).
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/firebase-service-account.json
       # Comma-separated frontend origins allowed by CORS (set in dashboard).
       - key: ALLOWED_ORIGINS
         sync: false
       # Shared secret expected in the X-Scheduler-Secret header.
       - key: RUN_ANALYSIS_SECRET
         sync: false
-      # External APIs (used from phase 2 onward).
-      - key: FINNHUB_API_KEY
-        sync: false
+      # LLM.
       - key: GEMINI_API_KEY
         sync: false
-      - key: TWELVE_DATA_API_KEY
+      # Persistence (Firebase Realtime Database URL).
+      - key: FIREBASE_DB_URL
         sync: false
-      # Firestore / GCP (phase 7).
       - key: GCP_PROJECT_ID
+        sync: false
+      # Optional market-data fallbacks (leave blank unless used).
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: TWELVE_DATA_API_KEY
         sync: false

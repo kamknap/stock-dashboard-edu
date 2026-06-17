@@ -1,24 +1,24 @@
-"""Analytical chat endpoint (stub).
+"""Analytical chat endpoint.
 
-Accepts the conversation history. The real implementation (phase 6) wires
-Gemini Flash function calling (the `get_stock_data` tool) plus Google Search
-grounding. The agent's answer is always framed as context and risks — current
-trend, key indicators, fresh news, risks — never a buy/sell verdict, and always
-carries the educational disclaimer.
+Accepts the conversation history and returns market context + risks for the
+company the user mentions (never a buy/sell verdict). See app.services.chat for
+the agent flow (ticker resolution -> deterministic data -> grounded narrative).
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.api.deps import get_llm, get_market
 from app.models.schemas import ChatRequest, ChatResponse
+from app.services.chat import answer_chat
+from app.services.llm import GeminiClient
+from app.services.market_data import YahooMarketData
 
 router = APIRouter(tags=["chat"])
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
-    last = request.messages[-1].content
-    reply = (
-        "Chat stub. The analytical agent (Gemini function calling + grounding) "
-        "is added in phase 6. It will return market context and risks, never a "
-        f"buy/sell verdict. Received message: {last[:200]}"
-    )
-    return ChatResponse(reply=reply)
+async def chat(
+    request: ChatRequest,
+    market: YahooMarketData = Depends(get_market),
+    llm: GeminiClient = Depends(get_llm),
+) -> ChatResponse:
+    return await answer_chat(market, llm, request)

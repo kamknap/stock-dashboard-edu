@@ -6,11 +6,12 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_llm, get_market
+from app.api.deps import get_llm, get_market, get_store
 from app.main import app
 from app.models.market import Candles, Snapshot
 from app.models.report import LLMNarrative, Source
 from app.services.market_data import ChartData
+from app.services.store import InMemoryReportStore
 from app.services.report import build_daily_report, infer_session
 
 
@@ -75,6 +76,7 @@ def test_build_daily_report() -> None:
 def test_run_analysis_route_with_secret() -> None:
     app.dependency_overrides[get_market] = lambda: _FakeMarket()
     app.dependency_overrides[get_llm] = lambda: _FakeLLM()
+    app.dependency_overrides[get_store] = lambda: InMemoryReportStore()
     try:
         client = TestClient(app)
         resp = client.post(

@@ -1,11 +1,12 @@
-"""Gemini narrative layer for the daily report.
+"""Gemini narrative layer.
 
-The model receives the already-computed indicators/signals/movers as the source
-of truth and only writes the narrative (market context + risks), grounded with
-Google Search for fresh news. On 2.5 models, forced JSON (responseSchema) and
+For the daily report the model receives the already-computed
+indicators/signals/movers as the source of truth and only writes the narrative
+(context + risks), grounded with Google Search. On 2.5 models, forced JSON and
 grounding cannot be combined, so we ask for JSON in the prompt and parse it
-defensively. Any failure (no key, HTTP error, unparseable JSON) falls back to a
-deterministic narrative built from the numbers, so the report is never empty.
+defensively, with a deterministic fallback so the report is never empty.
+
+The same client also powers the chat agent (free-form grounded text).
 """
 from __future__ import annotations
 
@@ -17,9 +18,10 @@ from pydantic import ValidationError
 from app.config import Settings, get_settings
 from app.models.analysis import TickerAnalysis
 from app.models.movers import MoversWindow, TopMovers
-from app.models.report import LLMNarrative, Source
+from app.models.report import LLMNarrative
+from app.models.schemas import Source
 
-_SYSTEM_INSTRUCTION = (
+_REPORT_INSTRUCTION = (
     "You are a financial-market analyst writing an EDUCATIONAL market-context "
     "report. The indicators and signals below were computed deterministically "
     "and are the source of truth: do not recompute, contradict, or invent "
@@ -44,13 +46,14 @@ class GeminiClient:
         self._client = client
         self._settings = settings or get_settings()
 
+    # ---- report narrative (validated JSON) ----
     async def generate_report_narrative(
         self, tickers: list[TickerAnalysis], movers: TopMovers
     ) -> tuple[LLMNarrative, list[Source], bool]:
         """Return (narrative, sources, llm_ok). Falls back deterministically."""
-        prompt = self._build_prompt(tickers, movers)
+        body = self._body(self._build_report_prompt(tickers, movers))
         try:
-            payload = await self._call(prompt)
+            payload = await self._post(body)
         except (GeminiError, httpx.HTTPError):
             return self._fallback(tickers, movers), [], False
 
@@ -64,8 +67,33 @@ class GeminiClient:
             return self._fallback(tickers, movers), sources, False
         return narrative, sources, True
 
+    # ---- chat (free-form grounded text) ----
+    async def generate_chat_reply(
+        self, contents: list[dict], system_instruction: str
+    ) -> tuple[str, list[Source], bool]:
+        """Return (reply_text, sources, ok). Empty text/ok=False on any failure."""
+        body = {
+            "systemInstruction": {"parts": [{"text": system_instruction}]},
+            "contents": contents,
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"temperature": self._settings.gemini_temperature},
+        }
+        try:
+            payload = await self._post(body)
+        except (GeminiError, httpx.HTTPError):
+            return "", [], False
+        text = self._text_from(payload)
+        return text, self._extract_sources(payload), bool(text.strip())
+
     # ---- HTTP ----
-    async def _call(self, prompt: str) -> dict:
+    def _body(self, prompt: str) -> dict:
+        return {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"temperature": self._settings.gemini_temperature},
+        }
+
+    async def _post(self, body: dict) -> dict:
         key = self._settings.gemini_api_key
         if not key:
             raise GeminiError("GEMINI_API_KEY is not set")
@@ -73,11 +101,6 @@ class GeminiClient:
             f"{self._settings.gemini_api_base}/models/"
             f"{self._settings.gemini_model}:generateContent"
         )
-        body = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "tools": [{"google_search": {}}],
-            "generationConfig": {"temperature": self._settings.gemini_temperature},
-        }
         resp = await self._client.post(
             url,
             headers={"x-goog-api-key": key, "Content-Type": "application/json"},
@@ -88,9 +111,11 @@ class GeminiClient:
             raise GeminiError(f"HTTP {resp.status_code}")
         return resp.json()
 
-    # ---- prompt ----
-    def _build_prompt(self, tickers: list[TickerAnalysis], movers: TopMovers) -> str:
-        lines = [_SYSTEM_INSTRUCTION, "", "Watchlist (deterministic, source of truth):"]
+    # ---- report prompt ----
+    def _build_report_prompt(
+        self, tickers: list[TickerAnalysis], movers: TopMovers
+    ) -> str:
+        lines = [_REPORT_INSTRUCTION, "", "Watchlist (deterministic, source of truth):"]
         lines.extend(_ticker_line(t) for t in tickers)
         lines += [
             "",

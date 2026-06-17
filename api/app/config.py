@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     # ---- Firestore / GCP (phase 7) ----
     gcp_project_id: str = ""
     google_application_credentials: str = ""
+    # Firebase Realtime Database URL (e.g. https://<proj>-default-rtdb.<region>.firebasedatabase.app).
+    firebase_db_url: str = ""
 
     @property
     def allowed_origins_list(self) -> list[str]:

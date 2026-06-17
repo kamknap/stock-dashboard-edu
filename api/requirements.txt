@@ -1,5 +1,4 @@
 # Runtime dependencies.
-# Firestore deps are added in a later phase.
 fastapi>=0.115,<0.116
 uvicorn[standard]>=0.34,<0.35
 pydantic>=2.9,<3.0
@@ -10,3 +9,6 @@ numpy>=1.26
 pandas>=2.0,<3.0
 # IANA timezone database (Windows lacks it) — for Europe/Warsaw report dates.
 tzdata>=2024.1
+# Persistence (phase 7): Firebase Realtime Database via the Admin SDK. Imported
+# lazily; only needed when RTDB is configured.
+firebase-admin>=6.5,<8.0

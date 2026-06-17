@@ -9,12 +9,19 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes_analysis, routes_chat, routes_health, routes_market
+from app.api import (
+    routes_analysis,
+    routes_chat,
+    routes_health,
+    routes_market,
+    routes_reports,
+)
 from app.config import get_settings
 from app.models.schemas import DISCLAIMER
 from app.services.cache import TTLCache
 from app.services.llm import GeminiClient
 from app.services.market_data import YahooMarketData
+from app.services.store import create_report_store
 
 settings = get_settings()
 
@@ -28,6 +35,7 @@ async def lifespan(app: FastAPI):
     app.state.cache = cache
     app.state.market = YahooMarketData(client, cache, settings=settings)
     app.state.llm = GeminiClient(client, settings=settings)
+    app.state.store = create_report_store(settings)
     try:
         yield
     finally:
@@ -36,7 +44,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Stock Dashboard API",
-    version="0.3.0",
+    version="0.4.0",
     description=(
         "Educational stock-market analysis backend. Not a trading bot and not "
         "investment advice."
@@ -56,6 +64,7 @@ app.include_router(routes_health.router)
 app.include_router(routes_analysis.router)
 app.include_router(routes_chat.router)
 app.include_router(routes_market.router)
+app.include_router(routes_reports.router)
 
 
 @app.get("/", tags=["system"])

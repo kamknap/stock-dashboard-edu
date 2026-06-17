@@ -54,7 +54,7 @@ stock-dashboard-edu/
 | Market data    | Yahoo Finance chart endpoint (keyless) — OHLC + price, all tickers |
 | News           | Gemini Google Search grounding (report + chat)                |
 | LLM            | Gemini Flash via Google AI Studio + Google Search grounding   |
-| Database       | Firestore                                                     |
+| Database       | Firebase Realtime Database (Spark, no billing card)           |
 | Scheduler      | GitHub Actions cron -> protected `/run-analysis` endpoint     |
 | CI/CD          | GitHub Actions (separate pipelines for web and api)           |
 
@@ -62,6 +62,18 @@ stock-dashboard-edu/
 > the first scheduled call (09:00 / 15:00) triggers a cold start (~30-60 s).
 > This is acceptable for a twice-daily job. The same `Dockerfile` also runs on
 > Cloud Run unchanged if you switch hosts later.
+
+### Persistence (Firebase Realtime Database)
+
+Firestore now requires an enabled billing account to create a database, so this
+project uses **Firebase Realtime Database** instead — the Spark plan is free and
+needs no payment card. Reports are stored under `reports/{date}_{session}`
+(e.g. `reports/2026-06-17_morning`). The store uses the firebase-admin SDK when
+`FIREBASE_DB_URL` + `GOOGLE_APPLICATION_CREDENTIALS` are set; otherwise it falls
+back to an in-memory store so the app runs locally without credentials (data is
+then lost on restart). To enable RTDB: create a Realtime Database in the Firebase
+console, download a service-account JSON key, and set `GOOGLE_APPLICATION_CREDENTIALS`
+(path to the key) and `FIREBASE_DB_URL` (the database URL).
 
 ## Backend — quick start (phase 1)
 
@@ -82,12 +94,14 @@ pytest
 | GET    | `/health`       | Liveness/readiness probe.                                   |
 | GET    | `/`             | Service info.                                               |
 | POST   | `/run-analysis` | Scheduler only (`X-Scheduler-Secret`). Builds the full daily report (analysis + movers + grounded LLM narrative). |
-| POST   | `/chat`         | Accepts conversation history; returns context + disclaimer. |
+| POST   | `/chat`         | Analytical chat: resolves a watchlist ticker, injects deterministic data, returns grounded context + risks + sources (never a verdict). |
 | GET    | `/watchlist`    | The configured watchlist (symbol, name, market, currency).  |
 | GET    | `/market/{symbol}` | Snapshot: price + deterministic daily % change. Watchlist symbols only. |
 | GET    | `/market/{symbol}/candles` | Daily OHLCV series (defaults: range=6mo, interval=1d).      |
 | GET    | `/market/{symbol}/analysis` | Snapshot + indicators (SMA/EMA/RSI/MACD) + rule-based signals. |
 | GET    | `/top-movers`   | Gainers/losers from the watchlist, daily and weekly windows. |
+| GET    | `/reports/latest` | Most recent stored daily report.                          |
+| GET    | `/reports/{date}/{session}` | Stored report for a date + `morning`/`afternoon`. |
 
 ### Data sources
 
@@ -100,6 +114,22 @@ single source of truth for OHLC + price across all tickers, including Samsung
 > Note: Yahoo's chart endpoint is unofficial (the same one `yfinance` wraps).
 > It is used here for a non-commercial, educational project, with aggressive
 > caching and a low request volume (two batch runs/day + cached chat).
+
+## Frontend — quick start (web/)
+
+React + Vite + Tailwind v4. Reads the backend's `/reports/latest`.
+
+```bash
+cd web
+npm install
+cp .env.example .env     # set VITE_API_BASE_URL if the API isn't on :8080
+npm run dev              # http://localhost:5173
+```
+
+The backend CORS already allows `http://localhost:5173`. It renders the daily report
+(market context, watchlist table, risks, sources), Top movers, a price chart per
+ticker (close + SMA20/EMA50 overlays computed client-side), and the analytical
+chat panel.
 
 ## Secrets
 
@@ -119,6 +149,6 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 3. ✅ Indicator layer (SMA/EMA/RSI/MACD, hand-computed in pandas) + explicit signal rules.
 4. ✅ Top movers ranking from watchlist (daily/weekly windows, sign-based gainers/losers).
 5. ✅ LLM report layer (Gemini + Google Search grounding -> validated JSON, deterministic fallback).
-6. Chat agent: function calling + `get_stock_data` tool + grounding. **(next)**
-7. Firestore persistence + frontend (dashboard, charts, report, Top movers, chat, disclaimer).
-8. Scheduler (GitHub Actions cron) + CI/CD.
+6. ✅ Chat agent: ticker resolution + `get_stock_data` + grounded reply (Gemini 2.5 can't combine FC + grounding, so we resolve the ticker server-side).
+7. Persistence (Realtime Database) ✅ + frontend (report, Top movers, charts, chat, disclaimer) ✅.
+8. CI (api `pytest` + web `npm build`, path-filtered) ✅ — scheduler cron + deploy (Render, Firebase Hosting) **(next)**.
