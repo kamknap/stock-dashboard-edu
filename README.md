@@ -3,12 +3,12 @@
 A web app for **educational** stock-market analysis with a small analytical chat.
 Twice a day it computes technical indicators for a watchlist, ranks the top
 movers, and generates a news-grounded market-context report. It is **read-only /
-analytical** — not a trading bot, and **not investment advice**.
+analytical** - not a trading bot, and **not investment advice**.
 
 **Live app:** https://stock-dashboard-edu.web.app
 **API:** https://stock-dashboard-api-9bcs.onrender.com (`/docs` for the OpenAPI UI)
 
-> Disclaimer shown across the UI: *Educational tool — not investment advice.*
+> Disclaimer shown across the UI: *Educational tool - not investment advice.*
 
 ## What it does
 
@@ -17,17 +17,17 @@ analytical** — not a trading bot, and **not investment advice**.
   cited sources.
 - **Watchlist** of US, PL and KR tickers with price, daily/weekly % change, RSI,
   rule-based signals and a price chart (SMA20 / EMA50 overlays).
-- **Analytical chat** — name a company; the agent fetches its data and fresh news
+- **Analytical chat** - name a company; the agent fetches its data and fresh news
   and replies with context and risks (never a buy/sell verdict).
 
 ## How it works (key decisions)
 
 - **Numbers are the source of truth, computed in Python.** SMA / EMA / RSI
   (Wilder) / MACD, % changes, signals and the movers ranking are all
-  deterministic (pandas). The LLM only narrates — it never invents or overrides
+  deterministic (pandas). The LLM only narrates - it never invents or overrides
   numbers and never predicts prices.
 - **Signals are explicit rules**, e.g. `RSI < 30 AND price > EMA50` =
-  "oversold within an uptrend" — not model opinion.
+  "oversold within an uptrend" - not model opinion.
 - **LLM = narrative layer.** Gemini receives the already-computed data and adds
   grounded news context. On Gemini 2.5, forced-JSON and Search grounding can't be
   combined, so JSON is requested in the prompt, then **parsed and validated with
@@ -36,7 +36,7 @@ analytical** — not a trading bot, and **not investment advice**.
   all markets, behind an **async TTL cache** with bounded-concurrency batching.
   (Finnhub's free tier lacks historical candles, so it isn't used.)
 - **Top movers come from the watchlist** (sign-based gainers/losers, daily +
-  weekly) — reusing cached candles, with no extra API calls.
+  weekly) - reusing cached candles, with no extra API calls.
 - **One reusable data/analysis layer** powers the report, the chat tool and the
   movers ranking.
 
