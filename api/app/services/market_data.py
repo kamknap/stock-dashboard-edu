@@ -91,6 +91,24 @@ class YahooMarketData:
         results = await asyncio.gather(*(one(s) for s in symbols))
         return dict(results)
 
+    async def get_charts(self, symbols: list[str]) -> dict[str, ChartData | None]:
+        """Fetch parsed charts for many symbols with bounded concurrency.
+
+        Reuses the cache, so callers that already fetched a symbol (e.g. the
+        report) incur no extra upstream request. Used by Top movers.
+        """
+        sem = asyncio.Semaphore(self._settings.market_max_concurrency)
+
+        async def one(sym: str) -> tuple[str, ChartData | None]:
+            async with sem:
+                try:
+                    return sym, await self._get_chart(sym, None, None)
+                except MarketDataError:
+                    return sym, None
+
+        results = await asyncio.gather(*(one(s) for s in symbols))
+        return dict(results)
+
     # ---- internals ----
     async def _get_chart(
         self, symbol: str, range: str | None, interval: str | None

@@ -87,6 +87,7 @@ pytest
 | GET    | `/market/{symbol}` | Snapshot: price + deterministic daily % change. Watchlist symbols only. |
 | GET    | `/market/{symbol}/candles` | Daily OHLCV series (defaults: range=6mo, interval=1d).      |
 | GET    | `/market/{symbol}/analysis` | Snapshot + indicators (SMA/EMA/RSI/MACD) + rule-based signals. |
+| GET    | `/top-movers`   | Gainers/losers from the watchlist, daily and weekly windows. |
 
 ### Data sources
 
@@ -116,8 +117,8 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 1. ✅ Repo structure + FastAPI skeleton (`/health`, `/run-analysis`, `/chat` stubs) + Dockerfile + requirements.
 2. ✅ Market data integration (Yahoo) + TTL cache + watchlist + snapshots/candles.
 3. ✅ Indicator layer (SMA/EMA/RSI/MACD, hand-computed in pandas) + explicit signal rules.
-4. Top movers ranking from watchlist (daily/weekly windows). **(next)**
-5. LLM report layer (grounding -> JSON) with Pydantic validation.
+4. ✅ Top movers ranking from watchlist (daily/weekly windows, sign-based gainers/losers).
+5. LLM report layer (grounding -> JSON) with Pydantic validation. **(next)**
 6. Chat agent: function calling + `get_stock_data` tool + grounding.
 7. Firestore persistence + frontend (dashboard, charts, report, Top movers, chat, disclaimer).
 8. Scheduler (GitHub Actions cron) + CI/CD.
