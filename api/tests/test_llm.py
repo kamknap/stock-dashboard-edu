@@ -56,7 +56,8 @@ def run(handler, *, api_key: str = "test-key"):
 
 
 def test_valid_json_and_sources() -> None:
-    text = '{"market_summary":"ok summary","ticker_notes":{"MSFT":"note"},"risks":["r1","r2"]}'
+    text = ('{"market_summary":"ok summary","ticker_notes":{"MSFT":"note"},'
+            '"opportunities":["o1"],"risks":["r1","r2"]}')
     chunks = [{"web": {"uri": "https://example.com/a", "title": "Example"}}]
 
     def handler(req: httpx.Request) -> httpx.Response:
@@ -66,6 +67,7 @@ def test_valid_json_and_sources() -> None:
     assert ok is True
     assert narrative.market_summary == "ok summary"
     assert {n.symbol: n.note for n in narrative.ticker_notes}["MSFT"] == "note"
+    assert narrative.opportunities == ["o1"]
     assert sources[0].url == "https://example.com/a"
 
 
@@ -88,6 +90,7 @@ def test_malformed_json_falls_back() -> None:
     assert ok is False
     assert narrative.market_summary.startswith("Automated summary")
     assert "MSFT" in {n.symbol for n in narrative.ticker_notes}  # fallback fills notes
+    assert narrative.opportunities  # fallback fills opportunities too
 
 
 def test_http_error_falls_back() -> None:

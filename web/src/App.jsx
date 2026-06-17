@@ -1,24 +1,25 @@
 import { useEffect, useState } from "react";
 import { API_BASE, getLatestReport } from "./lib/api";
+import Masthead from "./components/Masthead";
 import Disclaimer from "./components/Disclaimer";
-import ReportView from "./components/ReportView";
+import TickerCarousel from "./components/TickerCarousel";
 import TopMovers from "./components/TopMovers";
-import ChartPanel from "./components/ChartPanel";
-import Chat from "./components/Chat";
+import Narrative from "./components/Narrative";
+import ChatPanel from "./components/ChatPanel";
 
 export default function App() {
   const [report, setReport] = useState(null);
   const [status, setStatus] = useState("loading"); // loading | ok | empty | error
   const [error, setError] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
     getLatestReport()
       .then((data) => {
         if (!active) return;
-        if (data === null) {
-          setStatus("empty");
-        } else {
+        if (data === null) setStatus("empty");
+        else {
           setReport(data);
           setStatus("ok");
         }
@@ -34,39 +35,65 @@ export default function App() {
     };
   }, []);
 
+  const notes = report
+    ? Object.fromEntries((report.narrative?.ticker_notes || []).map((n) => [n.symbol, n.note]))
+    : {};
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 px-6 py-4">
-        <h1 className="text-xl font-semibold">
-          Stock Dashboard{" "}
-          <span className="font-normal text-slate-400">(educational)</span>
-        </h1>
-      </header>
+    <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
+      <Masthead report={report} />
       <Disclaimer />
-      <main className="mx-auto max-w-5xl space-y-8 px-6 py-6">
-        {status === "loading" && (
-          <p className="text-slate-400">Loading latest report…</p>
-        )}
+
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 px-3 py-3 lg:min-h-0">
+        {status === "loading" && <p className="text-inksoft">Loading latest report…</p>}
         {status === "empty" && (
-          <div className="rounded-lg border border-slate-800 bg-slate-900 p-6 text-slate-300">
+          <div className="rounded border border-line bg-panel p-6 text-ink">
             No report yet. Reports are generated at 09:00 and 15:00 (Europe/Warsaw).
           </div>
         )}
         {status === "error" && (
-          <div className="rounded-lg border border-red-900 bg-red-950 p-6 text-red-200">
-            Couldn’t load the report: {error}. Is the API running at{" "}
-            <code>{API_BASE}</code>?
+          <div className="rounded border border-down/40 bg-down/5 p-6 text-down">
+            Couldn’t load the report: {error}. Is the API running at <code>{API_BASE}</code>?
           </div>
         )}
+
         {status === "ok" && report && (
-          <>
-            <ReportView report={report} />
-            <TopMovers movers={report.top_movers} />
-            <ChartPanel tickers={report.tickers} />
-          </>
+          <div className="grid grid-cols-1 gap-3 lg:h-full lg:grid-cols-12">
+            <section className="flex flex-col gap-3 lg:col-span-5 lg:min-h-0">
+              <div className="min-h-[20rem] lg:min-h-0 lg:flex-1">
+                <TickerCarousel tickers={report.tickers} notes={notes} />
+              </div>
+              <TopMovers movers={report.top_movers} />
+            </section>
+
+            <section className="lg:col-span-4 lg:min-h-0">
+              <div className="h-full rounded border border-line bg-panel p-4 lg:overflow-hidden">
+                <Narrative narrative={report.narrative} sources={report.sources} />
+              </div>
+            </section>
+
+            <aside className="hidden rounded border border-line lg:col-span-3 lg:block lg:min-h-0">
+              <ChatPanel />
+            </aside>
+          </div>
         )}
-        <Chat />
       </main>
+
+      {/* Mobile: floating button + chat drawer */}
+      <button
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-4 right-4 z-30 rounded-full bg-ink px-4 py-3 text-sm text-paper shadow-lg lg:hidden"
+      >
+        Ask the analyst
+      </button>
+      {chatOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setChatOpen(false)} />
+          <div className="absolute inset-y-0 right-0 w-full max-w-sm border-l border-line bg-panel">
+            <ChatPanel onClose={() => setChatOpen(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -17,10 +17,9 @@ function shortDate(iso) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-export default function PriceChart({ symbol }) {
+export default function PriceChart({ symbol, height = 200 }) {
   const [data, setData] = useState([]);
-  const [status, setStatus] = useState("loading"); // loading | ok | error
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState("loading");
 
   useEffect(() => {
     let active = true;
@@ -30,61 +29,47 @@ export default function PriceChart({ symbol }) {
         if (!active) return;
         const sma20 = sma(candles.close, 20);
         const ema50 = ema(candles.close, 50);
-        const rows = candles.dates.map((iso, i) => ({
-          date: shortDate(iso),
-          close: candles.close[i],
-          sma20: sma20[i],
-          ema50: ema50[i],
-        }));
-        setData(rows);
+        setData(
+          candles.dates.map((iso, i) => ({
+            date: shortDate(iso),
+            close: candles.close[i],
+            sma20: sma20[i],
+            ema50: ema50[i],
+          })),
+        );
         setStatus("ok");
       })
-      .catch((e) => {
-        if (active) {
-          setError(String(e.message || e));
-          setStatus("error");
-        }
-      });
+      .catch(() => active && setStatus("error"));
     return () => {
       active = false;
     };
   }, [symbol]);
 
   if (status === "loading")
-    return <p className="text-sm text-slate-400">Loading chart…</p>;
+    return <p className="text-xs text-inksoft">Loading chart…</p>;
   if (status === "error")
-    return <p className="text-sm text-red-400">Couldn’t load chart: {error}</p>;
+    return <p className="text-xs text-down">Chart unavailable.</p>;
 
   return (
-    <div className="h-80 w-full">
+    <div style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
-          <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
-          <XAxis
-            dataKey="date"
-            stroke="#64748b"
-            tick={{ fontSize: 11 }}
-            minTickGap={40}
-          />
-          <YAxis
-            stroke="#64748b"
-            tick={{ fontSize: 11 }}
-            domain={["auto", "auto"]}
-            width={56}
-          />
+        <LineChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: -12 }}>
+          <CartesianGrid stroke="#ece7dc" strokeDasharray="3 3" />
+          <XAxis dataKey="date" stroke="#9a9488" tick={{ fontSize: 10 }} minTickGap={40} />
+          <YAxis stroke="#9a9488" tick={{ fontSize: 10 }} domain={["auto", "auto"]} width={48} />
           <Tooltip
             contentStyle={{
-              background: "#0f172a",
-              border: "1px solid #334155",
-              borderRadius: 8,
+              background: "#ffffff",
+              border: "1px solid #e4ded3",
+              borderRadius: 6,
               fontSize: 12,
+              color: "#141414",
             }}
-            labelStyle={{ color: "#94a3b8" }}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Line type="monotone" dataKey="close" name="Close" stroke="#38bdf8" dot={false} strokeWidth={1.6} />
-          <Line type="monotone" dataKey="sma20" name="SMA20" stroke="#a78bfa" dot={false} strokeWidth={1.2} />
-          <Line type="monotone" dataKey="ema50" name="EMA50" stroke="#f59e0b" dot={false} strokeWidth={1.2} />
+          <Legend wrapperStyle={{ fontSize: 11 }} />
+          <Line type="monotone" dataKey="close" name="Close" stroke="#141414" dot={false} strokeWidth={1.8} />
+          <Line type="monotone" dataKey="sma20" name="SMA20" stroke="#9a7b1f" dot={false} strokeWidth={1.1} />
+          <Line type="monotone" dataKey="ema50" name="EMA50" stroke="#8a6d3b" dot={false} strokeWidth={1.1} strokeDasharray="4 2" />
         </LineChart>
       </ResponsiveContainer>
     </div>

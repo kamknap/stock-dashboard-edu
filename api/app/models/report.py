@@ -32,6 +32,7 @@ class LLMNarrative(BaseModel):
 
     market_summary: str
     ticker_notes: list[TickerNote] = Field(default_factory=list)
+    opportunities: list[str] = Field(default_factory=list)
     risks: list[str] = Field(default_factory=list)
 
     @field_validator("ticker_notes", mode="before")

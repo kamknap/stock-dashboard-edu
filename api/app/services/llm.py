@@ -30,8 +30,10 @@ _REPORT_INSTRUCTION = (
     "NOT predict future prices. Return ONLY a single JSON object, with no "
     "markdown and no code fences, with exactly these keys: "
     '"market_summary" (string, 3-6 sentences on the overall context), '
-    '"ticker_notes" (object mapping each ticker SYMBOL to a 1-2 sentence '
-    'context/news note), "risks" (array of 3-6 short risk strings).'
+    '"ticker_notes" (object mapping each ticker SYMBOL to ONE concise sentence '
+    "of context/news), "
+    '"opportunities" (array of 3-6 short positive-outlook strings), '
+    '"risks" (array of 3-6 short risk strings).'
 )
 
 
@@ -199,9 +201,24 @@ class GeminiClient:
             codes = ", ".join(s.code for s in t.signals) or "no signals"
             notes[t.symbol] = f"{rsi}, {trend}; {codes}."
 
+        opportunities = []
+        if above:
+            opportunities.append(
+                f"{above} of {n} watchlist names are trading above their EMA50 "
+                "(longer-term uptrend)."
+            )
+        if movers.daily.gainers:
+            g = movers.daily.gainers[0]
+            opportunities.append(
+                f"Positive momentum: {g.symbol} leads daily gainers at {g.change_pct:+.2f}%."
+            )
+        if not opportunities:
+            opportunities = ["No standout positives in the deterministic signals."]
+
         return LLMNarrative(
             market_summary=" ".join(parts),
             ticker_notes=notes,
+            opportunities=opportunities,
             risks=[
                 "Generated without live news grounding — verify against current "
                 "sources before relying on this context."
