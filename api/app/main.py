@@ -13,6 +13,7 @@ from app.api import routes_analysis, routes_chat, routes_health, routes_market
 from app.config import get_settings
 from app.models.schemas import DISCLAIMER
 from app.services.cache import TTLCache
+from app.services.llm import GeminiClient
 from app.services.market_data import YahooMarketData
 
 settings = get_settings()
@@ -20,12 +21,13 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Own one shared httpx client + cache + market service for the app's life."""
+    """Own one shared httpx client + cache + services for the app's life."""
     client = httpx.AsyncClient()
     cache = TTLCache(settings.cache_ttl_seconds)
     app.state.http_client = client
     app.state.cache = cache
     app.state.market = YahooMarketData(client, cache, settings=settings)
+    app.state.llm = GeminiClient(client, settings=settings)
     try:
         yield
     finally:
@@ -34,7 +36,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Stock Dashboard API",
-    version="0.2.0",
+    version="0.3.0",
     description=(
         "Educational stock-market analysis backend. Not a trading bot and not "
         "investment advice."

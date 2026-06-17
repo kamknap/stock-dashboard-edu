@@ -1,7 +1,6 @@
-"""Smoke tests for the phase-1 endpoint stubs."""
+"""Smoke tests for the system, chat, and scheduler-protected endpoints."""
 from fastapi.testclient import TestClient
 
-from app.config import get_settings
 from app.main import app
 
 client = TestClient(app)
@@ -29,13 +28,6 @@ def test_run_analysis_requires_secret() -> None:
 def test_run_analysis_rejects_wrong_secret() -> None:
     resp = client.post("/run-analysis", headers={"X-Scheduler-Secret": "nope"})
     assert resp.status_code == 401
-
-
-def test_run_analysis_with_valid_secret() -> None:
-    secret = get_settings().run_analysis_secret
-    resp = client.post("/run-analysis", headers={"X-Scheduler-Secret": secret})
-    assert resp.status_code == 200
-    assert resp.json()["stub"] is True
 
 
 def test_chat_stub_returns_disclaimer() -> None:

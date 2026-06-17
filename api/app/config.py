@@ -18,35 +18,33 @@ class Settings(BaseSettings):
 
     # ---- Server ----
     environment: str = "development"
-    # Local default; on Render/Cloud Run the platform injects PORT.
     port: int = 8080
-    # Comma-separated list of CORS origins (frontend URLs).
     allowed_origins: str = "http://localhost:5173"
 
     # ---- Scheduler protection ----
     run_analysis_secret: str = "change-me"
 
     # ---- Market data (Yahoo Finance chart endpoint) ----
-    # Cache TTL for fetched chart data (seconds). Daily candles barely change
-    # intraday; this mainly protects the chat path and avoids re-fetching within
-    # a single analysis run.
     cache_ttl_seconds: float = 300.0
     http_timeout_seconds: float = 15.0
-    # Max concurrent upstream requests when fetching the whole watchlist.
     market_max_concurrency: int = 4
-    # Retries per request on 429/5xx before failing over to the next host.
     market_max_retries: int = 3
-    # Default candle window used for indicators / movers.
     market_default_range: str = "6mo"
     market_default_interval: str = "1d"
 
     # ---- Top movers ----
-    # How many gainers and losers to show per window.
     movers_count: int = 5
-    # Trading sessions that define the "weekly" window.
     movers_weekly_sessions: int = 5
 
-    # ---- External market / LLM APIs (used from phase 2 onward) ----
+    # ---- LLM (Gemini) ----
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_api_base: str = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_timeout_seconds: float = 30.0
+    gemini_temperature: float = 0.4
+    # Timezone for the report date and morning/afternoon session inference.
+    report_timezone: str = "Europe/Warsaw"
+
+    # ---- External market / LLM APIs ----
     finnhub_api_key: str = ""
     gemini_api_key: str = ""
     twelve_data_api_key: str = ""

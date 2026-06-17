@@ -81,7 +81,7 @@ pytest
 | ------ | --------------- | ----------------------------------------------------------- |
 | GET    | `/health`       | Liveness/readiness probe.                                   |
 | GET    | `/`             | Service info.                                               |
-| POST   | `/run-analysis` | Protected by `X-Scheduler-Secret` header. Scheduler only.   |
+| POST   | `/run-analysis` | Scheduler only (`X-Scheduler-Secret`). Builds the full daily report (analysis + movers + grounded LLM narrative). |
 | POST   | `/chat`         | Accepts conversation history; returns context + disclaimer. |
 | GET    | `/watchlist`    | The configured watchlist (symbol, name, market, currency).  |
 | GET    | `/market/{symbol}` | Snapshot: price + deterministic daily % change. Watchlist symbols only. |
@@ -118,7 +118,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 2. ✅ Market data integration (Yahoo) + TTL cache + watchlist + snapshots/candles.
 3. ✅ Indicator layer (SMA/EMA/RSI/MACD, hand-computed in pandas) + explicit signal rules.
 4. ✅ Top movers ranking from watchlist (daily/weekly windows, sign-based gainers/losers).
-5. LLM report layer (grounding -> JSON) with Pydantic validation. **(next)**
-6. Chat agent: function calling + `get_stock_data` tool + grounding.
+5. ✅ LLM report layer (Gemini + Google Search grounding -> validated JSON, deterministic fallback).
+6. Chat agent: function calling + `get_stock_data` tool + grounding. **(next)**
 7. Firestore persistence + frontend (dashboard, charts, report, Top movers, chat, disclaimer).
 8. Scheduler (GitHub Actions cron) + CI/CD.
