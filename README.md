@@ -17,7 +17,7 @@ analytical** - not a trading bot, and **not investment advice**.
   cited sources.
 - **Watchlist** of US, PL and KR tickers with price, daily/weekly % change, RSI,
   rule-based signals and a price chart (SMA20 / EMA50 overlays).
-- **Analytical chat** — name a company; the agent fetches its data and fresh news
+- **Analytical chat** - name a company; the agent fetches its data and fresh news
   and replies with context and risks (never a buy/sell verdict).
 
 ## How it works (key decisions)
