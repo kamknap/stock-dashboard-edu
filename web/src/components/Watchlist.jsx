@@ -83,7 +83,7 @@ export default function Watchlist({ tickers, notes }) {
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <header>
         <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-inksoft">
           Market at a glance
@@ -101,7 +101,7 @@ export default function Watchlist({ tickers, notes }) {
             <div key={t.symbol} className={hideOnMobile ? "hidden lg:block" : ""}>
               <button
                 onClick={() => setExpanded(isExpanded ? null : t.symbol)}
-                className={`flex w-full items-center gap-3.5 border-b border-line py-3 text-left ${
+                className={`flex w-full min-w-0 items-center gap-3.5 border-b border-line py-3 text-left ${
                   isNotable ? "bg-beige/40 lg:-mx-7 lg:px-7" : ""
                 }`}
               >
@@ -137,7 +137,7 @@ export default function Watchlist({ tickers, notes }) {
           onClick={() => setShowAll((v) => !v)}
           className="mt-2 text-xs font-semibold uppercase tracking-widest text-inksoft hover:text-ink lg:hidden"
         >
-          {showAll ? "Show fewer ▴" : `Show all ${items.length} ▾`}
+          {showAll ? "Show fewer" : `Show all ${items.length}`}
         </button>
       )}
 
@@ -146,14 +146,14 @@ export default function Watchlist({ tickers, notes }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search any ticker (e.g. TSLA, KGH.WA)"
-          className="flex-1 rounded border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-inksoft/70 focus:border-ink focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-inksoft/70 focus:border-ink focus:outline-none"
         />
         <button
           type="submit"
           disabled={searching || !query.trim()}
           className="rounded bg-ink px-3 py-2 text-sm text-paper disabled:opacity-40"
         >
-          {searching ? "…" : "Go"}
+          {searching ? "..." : "Go"}
         </button>
       </form>
       {searchError && <p className="mt-1 text-xs text-down">{searchError}</p>}

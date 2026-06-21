@@ -1,4 +1,4 @@
-// The "brief" — the editorial hero of the Quiet Board. It leads with a
+// The "brief" -- the editorial hero of the Quiet Board. It leads with a
 // headline + lede, then three numbered "what matters today" points, then
 // Opportunities / Risks, and finally a collapsible sources footer.
 //
@@ -85,7 +85,7 @@ export default function Narrative({ report }) {
   const risks = narrative.risks || [];
 
   return (
-    <article className="flex flex-col">
+    <article className="flex min-w-0 flex-col">
       <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-gold">
         {eyebrowText(report)}
       </p>
@@ -117,7 +117,7 @@ export default function Narrative({ report }) {
       )}
 
       {(opportunities.length > 0 || risks.length > 0) && (
-        <div className="mt-7 grid grid-cols-2 gap-6">
+        <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <SectionHeader title="Opportunities" accent="text-up" />
             <ul className="mt-2 list-disc space-y-1 pl-4 text-sm leading-snug text-ink">

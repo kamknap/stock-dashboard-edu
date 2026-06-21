@@ -64,7 +64,7 @@ export default function App() {
         )}
         {status === "error" && (
           <Centered>
-            <h2 className="font-serif text-2xl font-bold text-down">Couldn’t load the brief</h2>
+            <h2 className="font-serif text-2xl font-bold text-down">Could not load the brief</h2>
             <p className="mt-2 text-sm text-inksoft">
               {error}. Is the API running at <code>{API_BASE}</code>?
             </p>
@@ -73,10 +73,10 @@ export default function App() {
 
         {status === "ok" && report && (
           <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr]">
-            <section className="border-b border-line px-5 py-6 lg:border-b-0 lg:border-r lg:p-9">
+            <section className="min-w-0 border-b border-line px-5 py-6 lg:border-b-0 lg:border-r lg:p-9">
               <Narrative report={report} />
             </section>
-            <section className="flex flex-col gap-5 px-5 py-6 lg:p-7">
+            <section className="flex min-w-0 flex-col gap-5 px-5 py-6 lg:p-7">
               <Watchlist tickers={report.tickers} notes={notes} />
               <TopMovers movers={report.top_movers} />
             </section>
