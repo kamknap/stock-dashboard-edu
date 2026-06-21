@@ -2,10 +2,10 @@
 // headline + lede, then three numbered "what matters today" points, then
 // Opportunities / Risks, and finally a collapsible sources footer.
 //
-// headline + highlights come from the LLM narrative when present; if a stored
-// report predates those fields, we derive sensible fallbacks from the
-// deterministic data (market_summary + top movers), so the page always reads
-// well. The numbers themselves stay the backend's source of truth.
+// headline / highlights / opportunities come from the LLM narrative when
+// present; if the model omits them (or a stored report predates a field), we
+// derive sensible fallbacks from the deterministic data so no section is ever
+// blank. The numbers themselves stay the backend's source of truth.
 
 const fmtPct = (v) => (v == null ? "n/a" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`);
 
@@ -20,6 +20,15 @@ function withBoldNumbers(text) {
       part
     ),
   );
+}
+
+function countAboveEma50(tickers) {
+  return tickers.filter(
+    (t) =>
+      t.indicators?.close != null &&
+      t.indicators?.ema_50 != null &&
+      t.indicators.close > t.indicators.ema_50,
+  ).length;
 }
 
 function eyebrowText(report) {
@@ -48,12 +57,7 @@ function deriveHighlights(report) {
   const out = [];
   const tickers = report.tickers || [];
   const n = tickers.length;
-  const above = tickers.filter(
-    (t) =>
-      t.indicators?.close != null &&
-      t.indicators?.ema_50 != null &&
-      t.indicators.close > t.indicators.ema_50,
-  ).length;
+  const above = countAboveEma50(tickers);
   if (n) out.push(`${above} of ${n} watchlist names closed above their EMA50.`);
 
   const dg = report.top_movers?.daily?.gainers?.[0];
@@ -62,6 +66,27 @@ function deriveHighlights(report) {
   if (dl) out.push(`${dl.symbol} lagged at ${fmtPct(dl.change_pct)}.`);
 
   return out.slice(0, 3);
+}
+
+function deriveOpportunities(report) {
+  const given = report.narrative?.opportunities || [];
+  if (given.length) return given;
+
+  const out = [];
+  const tickers = report.tickers || [];
+  const n = tickers.length;
+  const above = countAboveEma50(tickers);
+  if (above) {
+    out.push(`${above} of ${n} watchlist names trade above their EMA50, a longer-term uptrend.`);
+  }
+  const wg = report.top_movers?.weekly?.gainers?.[0];
+  if (wg) out.push(`${wg.symbol} shows the strongest weekly momentum at ${fmtPct(wg.change_pct)}.`);
+  const bull = tickers.find((t) =>
+    (t.signals || []).some((s) => s.code === "macd_bullish_cross"),
+  );
+  if (bull) out.push(`${bull.symbol} just printed a bullish MACD crossover.`);
+
+  return out;
 }
 
 function SectionHeader({ title, accent }) {
@@ -81,7 +106,7 @@ export default function Narrative({ report }) {
   const sources = report.sources || [];
   const headline = deriveHeadline(narrative);
   const highlights = deriveHighlights(report);
-  const opportunities = narrative.opportunities || [];
+  const opportunities = deriveOpportunities(report);
   const risks = narrative.risks || [];
 
   return (
