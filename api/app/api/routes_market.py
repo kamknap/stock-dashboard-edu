@@ -1,9 +1,11 @@
 """Watchlist and market-data routes.
 
-`GET /watchlist` and `GET /top-movers` expose watchlist-derived data. The
-`/market/*` routes are bounded to watchlist symbols so they cannot be abused as
-an open proxy to Yahoo.
+`/watchlist` and `/top-movers` expose watchlist-derived data. The `/market/*`
+routes accept any well-formed ticker (validated by pattern) so the UI can look
+up symbols beyond the watchlist; responses are cached to limit upstream load.
 """
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.deps import get_market
@@ -13,18 +15,20 @@ from app.models.movers import TopMovers
 from app.services.analysis import analyze_symbol
 from app.services.market_data import MarketDataError, YahooMarketData
 from app.services.movers import compute_top_movers
-from app.watchlist import DEFAULT_SYMBOLS, DEFAULT_WATCHLIST
+from app.watchlist import DEFAULT_WATCHLIST
 
 router = APIRouter(tags=["market"])
 
+# Letters, digits, dot and dash (e.g. MSFT, KGH.WA, 005930.KS, BRK-B).
+_SYMBOL_RE = re.compile(r"^[A-Za-z0-9.\-]{1,15}$")
 
-def _require_watchlisted(symbol: str) -> str:
-    """Bound these endpoints to known tickers, so they can't be abused as an
-    open proxy to Yahoo (which would risk an IP ban on our upstream)."""
-    if symbol not in DEFAULT_SYMBOLS:
+
+def _validate_symbol(symbol: str) -> str:
+    """Reject malformed input so the endpoint can't be abused with arbitrary
+    path content; any well-formed ticker is allowed (cache limits upstream load)."""
+    if not _SYMBOL_RE.match(symbol):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"'{symbol}' is not in the watchlist.",
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid symbol '{symbol}'."
         )
     return symbol
 
@@ -51,7 +55,7 @@ async def top_movers(market: YahooMarketData = Depends(get_market)) -> TopMovers
 async def market_snapshot(
     symbol: str, market: YahooMarketData = Depends(get_market)
 ) -> Snapshot:
-    _require_watchlisted(symbol)
+    _validate_symbol(symbol)
     try:
         return await market.get_snapshot(symbol)
     except MarketDataError as exc:
@@ -67,7 +71,7 @@ async def market_candles(
     interval: str = Query(default="1d"),
     market: YahooMarketData = Depends(get_market),
 ) -> Candles:
-    _require_watchlisted(symbol)
+    _validate_symbol(symbol)
     try:
         return await market.get_candles(symbol, range=range, interval=interval)
     except MarketDataError as exc:
@@ -80,7 +84,7 @@ async def market_candles(
 async def market_analysis(
     symbol: str, market: YahooMarketData = Depends(get_market)
 ) -> TickerAnalysis:
-    _require_watchlisted(symbol)
+    _validate_symbol(symbol)
     try:
         return await analyze_symbol(market, symbol)
     except MarketDataError as exc:

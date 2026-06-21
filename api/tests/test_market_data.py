@@ -194,11 +194,21 @@ def test_market_route_ok_for_watchlisted() -> None:
     assert resp.json()["symbol"] == "MSFT"
 
 
-def test_market_route_404_for_non_watchlisted() -> None:
+def test_market_route_allows_any_valid_symbol() -> None:
     app.dependency_overrides[get_market] = lambda: _FakeMarket()
     try:
         client = TestClient(app)
-        resp = client.get("/market/TSLA")
+        resp = client.get("/market/TSLA")  # not in watchlist, but well-formed
+    finally:
+        app.dependency_overrides.clear()
+    assert resp.status_code == 200
+
+
+def test_market_route_rejects_malformed_symbol() -> None:
+    app.dependency_overrides[get_market] = lambda: _FakeMarket()
+    try:
+        client = TestClient(app)
+        resp = client.get("/market/bad!sym")
     finally:
         app.dependency_overrides.clear()
     assert resp.status_code == 404

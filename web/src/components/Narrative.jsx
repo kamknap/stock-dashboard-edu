@@ -43,8 +43,11 @@ export default function Narrative({ narrative, sources }) {
       )}
 
       {sources?.length > 0 && (
-        <Section title={`Sources (${sources.length})`}>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+        <details className="text-xs">
+          <summary className="cursor-pointer border-b border-line pb-1 text-[11px] uppercase tracking-widest text-inksoft">
+            Sources ({sources.length})
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
             {sources.map((s, i) => (
               <a
                 key={i}
@@ -57,7 +60,7 @@ export default function Narrative({ narrative, sources }) {
               </a>
             ))}
           </div>
-        </Section>
+        </details>
       )}
     </div>
   );

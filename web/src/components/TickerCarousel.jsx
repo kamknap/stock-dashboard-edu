@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PriceChart from "./PriceChart";
+import { getAnalysis } from "../lib/api";
 
 const fmt = (n) =>
   n == null ? "n/a" : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -30,9 +31,26 @@ function SignalChip({ signal }) {
 }
 
 export default function TickerCarousel({ tickers, notes }) {
-  const [i, setI] = useState(0);
+  const [extra, setExtra] = useState([]); // user-searched tickers
+  const items = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const t of [...tickers, ...extra]) {
+      if (t && !seen.has(t.symbol)) {
+        seen.add(t.symbol);
+        out.push(t);
+      }
+    }
+    return out;
+  }, [tickers, extra]);
+
+  const n = items.length;
+  // Start on a random watchlist ticker so it isn't always the same one first.
+  const [i, setI] = useState(() => (tickers.length ? Math.floor(Math.random() * tickers.length) : 0));
   const [paused, setPaused] = useState(false);
-  const n = tickers.length;
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
 
   useEffect(() => {
     if (paused || n <= 1) return undefined;
@@ -41,10 +59,39 @@ export default function TickerCarousel({ tickers, notes }) {
   }, [paused, n]);
 
   if (n === 0) return null;
-  const t = tickers[i];
-  const prev = () => setI((p) => (p - 1 + n) % n);
-  const next = () => setI((p) => (p + 1) % n);
+  const idx = Math.min(i, n - 1);
+  const t = items[idx];
+  const prev = () => setI((idx - 1 + n) % n);
+  const next = () => setI((idx + 1) % n);
   const rsi = t.indicators?.rsi_14;
+
+  async function onSearch(e) {
+    e.preventDefault();
+    const sym = query.trim().toUpperCase();
+    if (!sym || searching) return;
+    setSearchError("");
+    const existing = items.findIndex((x) => x.symbol === sym);
+    if (existing >= 0) {
+      setI(existing);
+      setQuery("");
+      return;
+    }
+    setSearching(true);
+    try {
+      const a = await getAnalysis(sym);
+      if (!a) {
+        setSearchError(`Not found: ${sym}`);
+      } else {
+        setExtra((prev) => [...prev, a]);
+        setI(n); // appended item becomes the new last index
+        setQuery("");
+      }
+    } catch {
+      setSearchError("Lookup failed.");
+    } finally {
+      setSearching(false);
+    }
+  }
 
   return (
     <div
@@ -58,18 +105,37 @@ export default function TickerCarousel({ tickers, notes }) {
           <button onClick={prev} aria-label="Previous" className="px-2 text-lg leading-none hover:text-ink">
             ‹
           </button>
-          <span className="text-xs tabular-nums">{i + 1}/{n}</span>
+          <span className="text-xs tabular-nums">{idx + 1}/{n}</span>
           <button onClick={next} aria-label="Next" className="px-2 text-lg leading-none hover:text-ink">
             ›
           </button>
         </div>
       </div>
 
+      <form onSubmit={onSearch} className="flex items-center gap-2 border-b border-line px-3 py-1.5">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setPaused(true)}
+          onBlur={() => setPaused(false)}
+          placeholder="Search any ticker (e.g. TSLA, KGH.WA)"
+          className="flex-1 rounded border border-line bg-paper px-2 py-1 text-xs text-ink placeholder:text-inksoft/70 focus:border-ink focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={searching || !query.trim()}
+          className="rounded bg-ink px-2.5 py-1 text-xs text-paper disabled:opacity-40"
+        >
+          {searching ? "…" : "Go"}
+        </button>
+      </form>
+      {searchError && <p className="px-3 pt-1 text-xs text-down">{searchError}</p>}
+
       <div className="flex flex-col p-4">
         <div className="flex items-baseline justify-between gap-3">
           <div className="min-w-0">
             <div className="font-serif text-2xl leading-tight">{t.symbol}</div>
-            <div className="truncate text-xs text-inksoft">{t.name}</div>
+            <div className="truncate text-xs text-inksoft">{t.name || ""}</div>
           </div>
           <div className="text-right">
             <div className="text-xl tabular-nums">
@@ -96,12 +162,12 @@ export default function TickerCarousel({ tickers, notes }) {
       </div>
 
       <div className="flex flex-wrap justify-center gap-1.5 pb-2">
-        {tickers.map((tk, k) => (
+        {items.map((tk, k) => (
           <button
             key={tk.symbol}
             onClick={() => setI(k)}
             aria-label={`Show ${tk.symbol}`}
-            className={`h-1.5 w-1.5 rounded-full ${k === i ? "bg-ink" : "bg-line"}`}
+            className={`h-1.5 w-1.5 rounded-full ${k === idx ? "bg-ink" : "bg-line"}`}
           />
         ))}
       </div>

@@ -18,6 +18,14 @@ export async function getCandles(symbol, range = "6mo", interval = "1d") {
   return res.json();
 }
 
+/** Fetch full analysis (snapshot + indicators + signals) for any symbol. */
+export async function getAnalysis(symbol) {
+  const res = await fetch(`${BASE}/market/${encodeURIComponent(symbol)}/analysis`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 /** Send the conversation history to the analytical chat agent. */
 export async function sendChat(messages) {
   const res = await fetch(`${BASE}/chat`, {
