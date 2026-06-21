@@ -100,7 +100,7 @@ export default function TickerCarousel({ tickers, notes }) {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="flex items-center justify-between border-b border-line px-3 py-2">
-        <h2 className="text-base">Watchlist</h2>
+        <h2 className="text-base">Notable this week</h2>
         <div className="flex items-center gap-2 text-inksoft">
           <button onClick={prev} aria-label="Previous" className="px-2 text-lg leading-none hover:text-ink">
             ‹

@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     # ---- Top movers ----
     movers_count: int = 5
     movers_weekly_sessions: int = 5
+    # How many 'notable' names to select for the report watchlist.
+    watchlist_size: int = 9
 
     # ---- LLM (Gemini) ----
     gemini_model: str = "gemini-2.5-flash"

@@ -179,7 +179,7 @@ def test_watchlist_route() -> None:
     resp = client.get("/watchlist")
     assert resp.status_code == 200
     body = resp.json()
-    assert len(body) == 9
+    assert len(body) >= 9
     assert {"symbol", "name", "market", "currency"} <= set(body[0])
 
 

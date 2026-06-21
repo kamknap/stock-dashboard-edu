@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { sendChat } from "../lib/api";
 
+function stripMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/(^|\n)\s*#{1,6}\s*/g, "$1")
+    .replace(/(^|\n)\s*[*-]\s+/g, "$1\u2022 ");
+}
+
 export default function ChatPanel({ onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -54,7 +63,7 @@ export default function ChatPanel({ onClose }) {
                   : "border border-line bg-paper text-ink"
               }`}
             >
-              {m.content}
+              {m.role === "model" ? stripMarkdown(m.content) : m.content}
             </span>
           </div>
         ))}

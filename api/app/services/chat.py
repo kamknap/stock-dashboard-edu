@@ -26,7 +26,8 @@ CHAT_SYSTEM = (
     "fresh news, and risks. Do NOT give buy/sell/hold advice and do NOT predict "
     "prices. Always answer in the same language as the user's last message. End "
     "your answer with: 'Educational tool, not investment advice.' "
-    "Use plain punctuation and do not use em dashes; prefer commas or periods."
+    "Use plain punctuation and do not use em dashes; prefer commas or periods. "
+    "Write in plain prose: no markdown, no asterisks, bold, headings or bullet symbols."
 )
 
 
