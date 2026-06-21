@@ -6,19 +6,30 @@ import { getAnalysis } from "../lib/api";
 const fmt = (n) =>
   n == null ? "n/a" : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
 
-function Change({ value }) {
-  if (value == null) return <span className="text-inksoft">n/a</span>;
+function ChangePill({ value }) {
+  if (value == null) {
+    return (
+      <span className="inline-block min-w-[62px] rounded-full bg-beige px-2 py-0.5 text-center text-xs text-inksoft">
+        n/a
+      </span>
+    );
+  }
   const up = value >= 0;
   return (
-    <span className={`font-semibold tabular-nums ${up ? "text-up" : "text-down"}`}>
+    <span
+      className={`inline-block min-w-[62px] rounded-full px-2 py-0.5 text-center text-xs tabular-nums ${
+        up ? "bg-up/10 text-up" : "bg-down/10 text-down"
+      }`}
+    >
       {up ? "+" : ""}
       {value.toFixed(2)}%
     </span>
   );
 }
 
-// Static watchlist: one row per ticker, no auto-rotation. A row expands to
-// reveal its full chart; search appends any ticker to the list.
+// Static watchlist (v2): clean rows show symbol + currency, a sparkline, price
+// and a colored change pill -- no truncated description. The plain-language
+// note moves into the expanded state, shown with the full chart on row click.
 export default function Watchlist({ tickers, notes }) {
   const [extra, setExtra] = useState([]); // user-searched tickers
   const [expanded, setExpanded] = useState(null); // symbol | null
@@ -84,11 +95,16 @@ export default function Watchlist({ tickers, notes }) {
 
   return (
     <div className="min-w-0">
-      <header>
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-inksoft">
-          Market at a glance
-        </h2>
-        <p className="mt-0.5 text-xs text-inksoft">Tap a row to expand its chart.</p>
+      <header className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-inksoft">
+            Market at a glance
+          </h2>
+          <p className="mt-0.5 text-xs text-inksoft">Tap a row to expand its chart.</p>
+        </div>
+        <span className="shrink-0 text-[10px] uppercase tracking-widest text-gold">
+          {items.length} names
+        </span>
       </header>
 
       <div className="mt-3">
@@ -101,29 +117,27 @@ export default function Watchlist({ tickers, notes }) {
             <div key={t.symbol} className={hideOnMobile ? "hidden lg:block" : ""}>
               <button
                 onClick={() => setExpanded(isExpanded ? null : t.symbol)}
-                className={`flex w-full min-w-0 items-center gap-3.5 border-b border-line py-3 text-left ${
+                className={`grid w-full grid-cols-[minmax(0,1fr)_60px_auto] items-center gap-3.5 border-b border-line py-2.5 text-left ${
                   isNotable ? "bg-beige/40 lg:-mx-7 lg:px-7" : ""
                 }`}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="text-[15px] font-bold text-ink">{t.symbol}</div>
-                  <div className="truncate text-xs text-inksoft">
-                    {notes[t.symbol] || t.name || ""}
-                  </div>
+                <div className="min-w-0 truncate">
+                  <span className="text-[15px] font-bold text-ink">{t.symbol}</span>
+                  <span className="ml-1.5 text-xs text-inksoft">{t.currency}</span>
                 </div>
-                <Sparkline symbol={t.symbol} up={up} width={72} height={22} />
-                <div className="min-w-[96px] text-right">
-                  <div className="text-[15px] font-semibold tabular-nums text-ink">
-                    {fmt(t.snapshot?.price)}{" "}
-                    <span className="text-xs font-normal text-inksoft">{t.currency}</span>
-                  </div>
-                  <div className="text-[13px]">
-                    <Change value={t.snapshot?.change_pct} />
-                  </div>
+                <Sparkline symbol={t.symbol} up={up} width={60} height={22} />
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-[15px] font-semibold tabular-nums text-ink">
+                    {fmt(t.snapshot?.price)}
+                  </span>
+                  <ChangePill value={t.snapshot?.change_pct} />
                 </div>
               </button>
               {isExpanded && (
                 <div className="border-b border-line py-3">
+                  {notes[t.symbol] && (
+                    <p className="mb-2 text-xs leading-snug text-inksoft">{notes[t.symbol]}</p>
+                  )}
                   <PriceChart symbol={t.symbol} height={200} />
                 </div>
               )}

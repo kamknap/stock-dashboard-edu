@@ -2,8 +2,9 @@
 
 Selects the most "notable" names of the week from the candidate pool (largest
 absolute weekly move), then ties the deterministic per-ticker analysis and Top
-movers to the LLM narrative. A failing ticker is skipped rather than failing
-the whole report.
+movers to the LLM layers: the per-report narrative and the long-form Daily
+Brief. Both LLM calls run concurrently. A failing ticker is skipped rather than
+failing the whole report; a failing LLM call falls back deterministically.
 """
 from __future__ import annotations
 
@@ -81,7 +82,12 @@ async def build_daily_report(
     tickers = [a for a in analyses if a is not None]
 
     movers = await compute_top_movers(market, chosen)
-    narrative, sources, llm_ok = await llm.generate_report_narrative(tickers, movers)
+
+    # Narrative and Daily Brief are independent LLM calls -> run them together.
+    (narrative, sources, llm_ok), (brief, _brief_ok) = await asyncio.gather(
+        llm.generate_report_narrative(tickers, movers),
+        llm.generate_daily_brief(tickers, movers, now=now),
+    )
 
     return DailyReport(
         date=now.strftime("%Y-%m-%d"),
@@ -90,6 +96,7 @@ async def build_daily_report(
         tickers=tickers,
         top_movers=movers,
         narrative=narrative,
+        daily_brief=brief,
         sources=sources,
         llm_ok=llm_ok,
     )

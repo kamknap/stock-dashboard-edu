@@ -1,16 +1,15 @@
-// The "brief" -- the editorial hero of the Quiet Board. It leads with a
-// headline + lede, then three numbered "what matters today" points, then
-// Opportunities / Risks, and finally a collapsible sources footer.
+// The "brief" -- the editorial hero of the Quiet Board (v2). It leads with a
+// SHORT headline (not the raw summary), a 2-sentence lede, three numbered
+// "what matters today" points, then capped Opportunities / Risks (3 each), and
+// a collapsible sources footer. Long-form prose lives in the Daily Brief modal.
 //
-// headline / highlights / opportunities come from the LLM narrative when
+// headline / lede / highlights / opportunities come from the LLM narrative when
 // present; if the model omits them (or a stored report predates a field), we
-// derive sensible fallbacks from the deterministic data so no section is ever
-// blank. The numbers themselves stay the backend's source of truth.
+// derive sensible fallbacks from the deterministic data so no section is blank.
 
 const fmtPct = (v) => (v == null ? "n/a" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`);
 
 function withBoldNumbers(text) {
-  // Bold figures (12.3, +1.5%, 38) so key data pops in the prose.
   return text.split(/([-+]?\d[\d.,]*%?)/g).map((part, i) =>
     /^[-+]?\d/.test(part) ? (
       <strong key={i} className="font-semibold text-ink">
@@ -50,6 +49,12 @@ function deriveHeadline(narrative) {
   return first.replace(/\.$/, "") || "Today's market brief";
 }
 
+function deriveLede(narrative) {
+  if (narrative?.lede) return narrative.lede;
+  const summary = narrative?.market_summary || "";
+  return summary.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ");
+}
+
 function deriveHighlights(report) {
   const given = report.narrative?.highlights || [];
   if (given.length) return given.slice(0, 3);
@@ -70,7 +75,7 @@ function deriveHighlights(report) {
 
 function deriveOpportunities(report) {
   const given = report.narrative?.opportunities || [];
-  if (given.length) return given;
+  if (given.length) return given.slice(0, 3);
 
   const out = [];
   const tickers = report.tickers || [];
@@ -86,7 +91,7 @@ function deriveOpportunities(report) {
   );
   if (bull) out.push(`${bull.symbol} just printed a bullish MACD crossover.`);
 
-  return out;
+  return out.slice(0, 3);
 }
 
 function SectionHeader({ title, accent }) {
@@ -105,9 +110,10 @@ export default function Narrative({ report }) {
   const narrative = report.narrative || {};
   const sources = report.sources || [];
   const headline = deriveHeadline(narrative);
+  const lede = deriveLede(narrative);
   const highlights = deriveHighlights(report);
   const opportunities = deriveOpportunities(report);
-  const risks = narrative.risks || [];
+  const risks = (narrative.risks || []).slice(0, 3);
 
   return (
     <article className="flex min-w-0 flex-col">
@@ -119,11 +125,7 @@ export default function Narrative({ report }) {
         {headline}
       </h2>
 
-      {narrative.market_summary && (
-        <p className="mt-4 text-base leading-relaxed text-ink">
-          {narrative.market_summary}
-        </p>
-      )}
+      {lede && <p className="mt-4 text-base leading-relaxed text-ink">{lede}</p>}
 
       {highlights.length > 0 && (
         <div className="mt-6">

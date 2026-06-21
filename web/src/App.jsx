@@ -6,6 +6,7 @@ import Watchlist from "./components/Watchlist";
 import TopMovers from "./components/TopMovers";
 import Narrative from "./components/Narrative";
 import ChatPanel from "./components/ChatPanel";
+import DailyBriefModal from "./components/DailyBriefModal";
 
 function Centered({ children }) {
   return <div className="mx-auto max-w-xl px-6 py-20 text-center">{children}</div>;
@@ -16,6 +17,7 @@ export default function App() {
   const [status, setStatus] = useState("loading"); // loading | ok | empty | error
   const [error, setError] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
+  const [briefOpen, setBriefOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -45,7 +47,11 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Masthead report={report} onAskAnalyst={() => setChatOpen(true)} />
+      <Masthead
+        report={report}
+        onAskAnalyst={() => setChatOpen(true)}
+        onOpenBrief={() => setBriefOpen(true)}
+      />
       <Disclaimer />
 
       <main className="mx-auto w-full max-w-screen-2xl flex-1 pb-24 lg:pb-0">
@@ -84,16 +90,27 @@ export default function App() {
         )}
       </main>
 
-      {/* Mobile: sticky "Ask the analyst" bar with a fade so content scrolls under it. */}
+      {/* Mobile: sticky action bar (Daily Brief + Ask the analyst) with a fade. */}
       {status === "ok" && (
-        <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-paper via-paper/95 to-transparent px-4 pb-3 pt-8 lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 bg-gradient-to-t from-paper via-paper/95 to-transparent px-4 pb-3 pt-8 lg:hidden">
+          <button
+            onClick={() => setBriefOpen(true)}
+            className="flex-1 rounded-full bg-ink py-3 text-sm font-semibold text-paper shadow-[0_6px_20px_rgba(0,0,0,.18)]"
+          >
+            ✦ Daily Brief
+          </button>
           <button
             onClick={() => setChatOpen(true)}
-            className="w-full rounded-full bg-ink py-3 text-sm font-semibold text-paper shadow-[0_6px_20px_rgba(0,0,0,.18)]"
+            className="flex-1 rounded-full border border-ink bg-paper py-3 text-sm font-semibold text-ink"
           >
             Ask the analyst
           </button>
         </div>
+      )}
+
+      {/* Daily Brief reading modal. */}
+      {briefOpen && (
+        <DailyBriefModal brief={report?.daily_brief} onClose={() => setBriefOpen(false)} />
       )}
 
       {/* Chat: right-side panel on desktop, full-width bottom sheet on mobile. */}

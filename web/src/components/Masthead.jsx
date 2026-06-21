@@ -1,4 +1,4 @@
-export default function Masthead({ report, onAskAnalyst }) {
+export default function Masthead({ report, onAskAnalyst, onOpenBrief }) {
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -24,14 +24,24 @@ export default function Masthead({ report, onAskAnalyst }) {
       </div>
       <div className="relative border-t border-line py-1.5 text-center">
         <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Stock Dashboard</h1>
-        {onAskAnalyst && (
-          <button
-            onClick={onAskAnalyst}
-            className="absolute right-6 top-1/2 hidden -translate-y-1/2 rounded-full border border-ink bg-paper px-4 py-2 text-[13px] font-semibold text-ink hover:bg-ink hover:text-paper lg:inline-flex"
-          >
-            Ask the analyst →
-          </button>
-        )}
+        <div className="absolute right-6 top-1/2 hidden -translate-y-1/2 items-center gap-2 lg:flex">
+          {onOpenBrief && (
+            <button
+              onClick={onOpenBrief}
+              className="rounded-full bg-ink px-4 py-2 text-[13px] font-semibold text-paper hover:opacity-90"
+            >
+              ✦ Daily Brief
+            </button>
+          )}
+          {onAskAnalyst && (
+            <button
+              onClick={onAskAnalyst}
+              className="rounded-full border border-ink bg-paper px-4 py-2 text-[13px] font-semibold text-ink hover:bg-ink hover:text-paper"
+            >
+              Ask the analyst →
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

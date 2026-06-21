@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app.api.deps import get_llm, get_market, get_store
 from app.main import app
 from app.models.market import Candles, Snapshot
-from app.models.report import LLMNarrative, Source
+from app.models.report import BriefSection, DailyBrief, LLMNarrative, Source
 from app.services.market_data import ChartData
 from app.services.store import InMemoryReportStore
 from app.services.report import build_daily_report, infer_session
@@ -46,8 +46,29 @@ class _FakeMarket:
 class _FakeLLM:
     async def generate_report_narrative(self, tickers, movers):
         return (
-            LLMNarrative(market_summary="summary", ticker_notes={}, risks=["r"]),
+            LLMNarrative(
+                headline="markets steady",
+                market_summary="summary",
+                lede="lede sentence one. lede sentence two.",
+                highlights=["h1", "h2", "h3"],
+                ticker_notes={},
+                opportunities=["o"],
+                risks=["r"],
+            ),
             [Source(title="Example", url="https://example.com")],
+            True,
+        )
+
+    async def generate_daily_brief(self, tickers, movers, *, now):
+        return (
+            DailyBrief(
+                title="brief title",
+                lede="brief lede.",
+                updated_at=now,
+                sections=[BriefSection(heading="Macro & rates", body="body")],
+                watch=["w1", "w2", "w3"],
+                sources=[Source(title="Example", url="https://example.com")],
+            ),
             True,
         )
 
@@ -67,8 +88,13 @@ def test_build_daily_report() -> None:
     assert len(report.tickers) == 2
     assert report.llm_ok is True
     assert report.narrative.market_summary == "summary"
+    assert report.narrative.headline == "markets steady"
     assert report.sources[0].url == "https://example.com"
     assert "not investment advice" in report.disclaimer.lower()
+    # the Daily Brief was generated and attached to the report
+    assert report.daily_brief is not None
+    assert report.daily_brief.sections[0].heading == "Macro & rates"
+    assert report.daily_brief.watch == ["w1", "w2", "w3"]
     # indicators were actually computed from the candles
     assert report.tickers[0].indicators.rsi_14 is not None
 
@@ -90,4 +116,5 @@ def test_run_analysis_route_with_secret() -> None:
     assert body["session"] == "afternoon"
     assert body["tickers"]
     assert "market_summary" in body["narrative"]
+    assert body["daily_brief"]["sections"][0]["heading"] == "Macro & rates"
     assert "not investment advice" in body["disclaimer"].lower()
