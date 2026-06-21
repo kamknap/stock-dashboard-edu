@@ -31,8 +31,10 @@ function Window({ title, win }) {
 
 export default function TopMovers({ movers }) {
   return (
-    <div className="rounded border border-line bg-panel p-3">
-      <h2 className="mb-2 text-base">Top movers</h2>
+    <div className="rounded border border-line bg-panel p-4">
+      <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-inksoft">
+        Top movers
+      </h2>
       <div className="grid grid-cols-2 gap-4 text-sm">
         <Window title="Daily" win={movers.daily} />
         <Window title="Weekly" win={movers.weekly} />

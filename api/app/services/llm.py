@@ -29,7 +29,11 @@ _REPORT_INSTRUCTION = (
     "for these companies as of today. Do NOT give buy/sell/hold advice and do "
     "NOT predict future prices. Return ONLY a single JSON object, with no "
     "markdown and no code fences, with exactly these keys: "
+    '"headline" (string, ONE short editorial takeaway of at most 8 words, '
+    "like a newspaper headline, no ticker symbols required, no buy/sell), "
     '"market_summary" (string, 3-6 sentences on the overall context), '
+    '"highlights" (array of exactly 3 short plain sentences answering "what '
+    'matters today", each referencing a concrete figure from the data), '
     '"ticker_notes" (object mapping each ticker SYMBOL to ONE concise sentence '
     "of context/news), "
     '"opportunities" (array of 3-6 short positive-outlook strings), '
@@ -216,8 +220,24 @@ class GeminiClient:
         if not opportunities:
             opportunities = ["No standout positives in the deterministic signals."]
 
+        headline = (
+            "Most names hold above their trend"
+            if n and above > n / 2
+            else "Watchlist leans below its trend"
+        )
+
+        highlights = [parts[0]]
+        if movers.daily.gainers:
+            g = movers.daily.gainers[0]
+            highlights.append(f"{g.symbol} led the tape at {g.change_pct:+.2f}%.")
+        if movers.daily.losers:
+            d = movers.daily.losers[0]
+            highlights.append(f"{d.symbol} lagged at {d.change_pct:+.2f}%.")
+
         return LLMNarrative(
+            headline=headline,
             market_summary=" ".join(parts),
+            highlights=highlights[:3],
             ticker_notes=notes,
             opportunities=opportunities,
             risks=[

@@ -30,7 +30,14 @@ class TickerNote(BaseModel):
 class LLMNarrative(BaseModel):
     """Validated JSON returned by Gemini (the narrative layer only)."""
 
+    # One-line editorial takeaway used as the brief headline. Optional so older
+    # stored reports (and partial model output) still validate; the client
+    # derives a fallback from market_summary when this is empty.
+    headline: str = ""
     market_summary: str
+    # 2-3 plain sentences answering "what matters today". Optional for the same
+    # backward-compat reason; the client derives a fallback from the movers.
+    highlights: list[str] = Field(default_factory=list)
     ticker_notes: list[TickerNote] = Field(default_factory=list)
     opportunities: list[str] = Field(default_factory=list)
     risks: list[str] = Field(default_factory=list)

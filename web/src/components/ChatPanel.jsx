@@ -57,10 +57,10 @@ export default function ChatPanel({ onClose }) {
         {messages.map((m, i) => (
           <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
             <span
-              className={`inline-block max-w-[88%] whitespace-pre-wrap rounded px-3 py-2 text-left ${
+              className={`inline-block max-w-[88%] whitespace-pre-wrap px-3 py-2.5 text-left text-[13px] ${
                 m.role === "user"
-                  ? "bg-beige text-ink"
-                  : "border border-line bg-paper text-ink"
+                  ? "rounded-[14px_14px_4px_14px] bg-ink text-paper"
+                  : "rounded-[14px_14px_14px_4px] border border-line bg-panel text-ink"
               }`}
             >
               {m.role === "model" ? stripMarkdown(m.content) : m.content}
@@ -86,19 +86,20 @@ export default function ChatPanel({ onClose }) {
         )}
       </div>
 
-      <form onSubmit={onSend} className="flex gap-2 border-t border-line p-3">
+      <form onSubmit={onSend} className="flex items-center gap-2 border-t border-line p-3">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about a company…"
-          className="flex-1 rounded border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-inksoft/70 focus:border-ink focus:outline-none"
+          className="h-11 flex-1 rounded-full border border-line bg-paper px-4 text-sm text-ink placeholder:text-inksoft/70 focus:border-ink focus:outline-none"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded bg-ink px-3 py-2 text-sm text-paper disabled:opacity-40"
+          aria-label="Send"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-paper disabled:opacity-40"
         >
-          Send
+          ↑
         </button>
       </form>
     </div>

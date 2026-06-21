@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { API_BASE, getLatestReport } from "./lib/api";
 import Masthead from "./components/Masthead";
 import Disclaimer from "./components/Disclaimer";
-import TickerCarousel from "./components/TickerCarousel";
+import Watchlist from "./components/Watchlist";
 import TopMovers from "./components/TopMovers";
 import Narrative from "./components/Narrative";
 import ChatPanel from "./components/ChatPanel";
+
+function Centered({ children }) {
+  return <div className="mx-auto max-w-xl px-6 py-20 text-center">{children}</div>;
+}
 
 export default function App() {
   const [report, setReport] = useState(null);
@@ -40,54 +44,63 @@ export default function App() {
     : {};
 
   return (
-    <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
-      <Masthead report={report} />
+    <div className="flex min-h-screen flex-col">
+      <Masthead report={report} onAskAnalyst={() => setChatOpen(true)} />
       <Disclaimer />
 
-      <main className="mx-auto w-full max-w-screen-2xl flex-1 px-3 py-3 lg:min-h-0">
-        {status === "loading" && <p className="text-inksoft">Loading latest report…</p>}
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 pb-24 lg:pb-0">
+        {status === "loading" && (
+          <Centered>
+            <p className="text-inksoft">Loading the latest brief…</p>
+          </Centered>
+        )}
         {status === "empty" && (
-          <div className="rounded border border-line bg-panel p-6 text-ink">
-            No report yet. Reports are generated at 09:00 and 15:00 (Europe/Warsaw).
-          </div>
+          <Centered>
+            <h2 className="font-serif text-2xl font-bold text-ink">No brief yet</h2>
+            <p className="mt-2 text-sm text-inksoft">
+              Reports are generated at 09:00 and 15:00 (Europe/Warsaw). Check back shortly.
+            </p>
+          </Centered>
         )}
         {status === "error" && (
-          <div className="rounded border border-down/40 bg-down/5 p-6 text-down">
-            Couldn’t load the report: {error}. Is the API running at <code>{API_BASE}</code>?
-          </div>
+          <Centered>
+            <h2 className="font-serif text-2xl font-bold text-down">Couldn’t load the brief</h2>
+            <p className="mt-2 text-sm text-inksoft">
+              {error}. Is the API running at <code>{API_BASE}</code>?
+            </p>
+          </Centered>
         )}
 
         {status === "ok" && report && (
-          <div className="grid grid-cols-1 gap-3 lg:h-full lg:grid-cols-12">
-            <section className="flex flex-col gap-3 lg:col-span-5 lg:min-h-0 lg:overflow-y-auto">
-              <TickerCarousel tickers={report.tickers} notes={notes} />
+          <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr]">
+            <section className="border-b border-line px-5 py-6 lg:border-b-0 lg:border-r lg:p-9">
+              <Narrative report={report} />
+            </section>
+            <section className="flex flex-col gap-5 px-5 py-6 lg:p-7">
+              <Watchlist tickers={report.tickers} notes={notes} />
               <TopMovers movers={report.top_movers} />
             </section>
-
-            <section className="lg:col-span-4 lg:min-h-0">
-              <div className="h-full rounded border border-line bg-panel p-4 lg:overflow-hidden">
-                <Narrative narrative={report.narrative} sources={report.sources} />
-              </div>
-            </section>
-
-            <aside className="hidden rounded border border-line lg:col-span-3 lg:block lg:min-h-0">
-              <ChatPanel />
-            </aside>
           </div>
         )}
       </main>
 
-      {/* Mobile: floating button + chat drawer */}
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-4 right-4 z-30 rounded-full bg-ink px-4 py-3 text-sm text-paper shadow-lg lg:hidden"
-      >
-        Ask the analyst
-      </button>
+      {/* Mobile: sticky "Ask the analyst" bar with a fade so content scrolls under it. */}
+      {status === "ok" && (
+        <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-paper via-paper/95 to-transparent px-4 pb-3 pt-8 lg:hidden">
+          <button
+            onClick={() => setChatOpen(true)}
+            className="w-full rounded-full bg-ink py-3 text-sm font-semibold text-paper shadow-[0_6px_20px_rgba(0,0,0,.18)]"
+          >
+            Ask the analyst
+          </button>
+        </div>
+      )}
+
+      {/* Chat: right-side panel on desktop, full-width bottom sheet on mobile. */}
       {chatOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/30" onClick={() => setChatOpen(false)} />
-          <div className="absolute inset-y-0 right-0 w-full max-w-sm border-l border-line bg-panel">
+          <div className="absolute inset-x-0 bottom-0 h-[85vh] overflow-hidden rounded-t-[18px] border-t-2 border-ink bg-panel shadow-[0_-8px_24px_rgba(0,0,0,.12)] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-auto lg:w-full lg:max-w-md lg:rounded-none lg:border-l-2 lg:border-t-0 lg:shadow-[-8px_0_24px_rgba(0,0,0,.12)]">
             <ChatPanel onClose={() => setChatOpen(false)} />
           </div>
         </div>
